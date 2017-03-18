@@ -1,7 +1,9 @@
 <canvas id="myCanvas" width="400" height="560" style="border:1px black solid"/>
 <script>
 
-var tetrisShapes =
+// Note - iterating over 2d array, I do y then x so it matches the visual representation
+
+var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS MIGHT BREAK!!
 {
     lBlock:
     {
@@ -22,6 +24,40 @@ var tetrisShapes =
             [1, 1]
         ]
     }
+};
+
+var cloneShape = function(shape) // This is needed because we will be rotating the shape
+{
+    var s = tetrisShapes[shape];
+    if(!s)
+    {
+        console.log("Warning, invalid shape specified, picking square instead");
+        s = tetrisShapes["square"];
+    }
+    var newShape = {};
+    newShape.color = s.color;
+    newShape.shape = [];
+    for(var i=0; i<s.shape.length; i++)
+    {
+        newShape.shape[i] = [];
+        for(var j=0; j<s.shape[i].length; j++)
+        {
+            newShape.shape[i][j] = s.shape[i][j];
+        }
+    }
+    return newShape;
+};
+
+
+// shapeCellPos - the position of the shape in cell co-ordinates
+// localCellPos - the position of the cell inside the shape
+var localCellToWorldCell = function(shapeCellPos, localCellPos)
+{
+    return(
+    {
+        x:shapeCellPos.x + localCellPos.x,
+        y:shapeCellPos.y + localCellPos.y
+    });
 };
 
 var worldToCell = function(position, cellSize)
@@ -49,7 +85,8 @@ TetrisShape = function()
     this.init = function(type)
     {
         this.type = type;
-        this.data = tetrisShapes[type];
+        // Refactor note, this being in data is bad, should have a this.shape
+        this.data = cloneShape(type);
     };
 };
 
@@ -57,11 +94,11 @@ TetrisShape.prototype.spacesLeft = function() // Number of empty columns on left
 {
     var minSpace = 5;
     var shape = this.data.shape;
-    for(var i=0; i<shape.length; i++) // Rows
+    for(var i=0; i<shape.length; i++)
     {
-        for(var j=0; j<shape[i].length; j++) // Columns
+        for(var j=0; j<shape[i].length; j++)
         {
-            if(shape[j] == 1 && j < minSpace)
+            if(shape[i][j] == 1 && j < minSpace)
             {
                 minSpace = j;
                 break;
@@ -75,13 +112,15 @@ TetrisShape.prototype.spacesRight = function() // Number of empty columns on lef
 {
     var minSpace = 5;
     var shape = this.data.shape;
-    for(var i=0; i<shape.length; i++) // Rows
+    for(var i=0; i<shape.length; i++)
     {
-        for(var j=0; j<shape[i].length; j++) // Columns
+        var notJ = -1;
+        for(var j=shape[i].length-1; j>-1; j--)
         {
-            if(shape[j] == 1 && j < minSpace)
+            notJ++;
+            if(shape[i][j] == 1 && notJ < minSpace)
             {
-                minSpace = j;
+                minSpace = notJ;
                 break;
             }
         }
@@ -89,18 +128,130 @@ TetrisShape.prototype.spacesRight = function() // Number of empty columns on lef
     return minSpace;
 };
 
+TetrisShape.prototype.spacesBottom = function() // Number of empty columns at the bottom
+{
+    var minSpace = 5;
+    var shape = this.data.shape;
+    var notJ = -1;
+    for(var i=shape.length-1; i>-1; i--)
+    {
+        notJ++;
+        for(var j=0; j<shape[i].length; j++)
+        {
+            if(shape[i][j] == 1 && notJ < minSpace)
+            {
+                minSpace = notJ;
+                return minSpace;
+            }
+        }
+    }
+    return minSpace;
+};
+
+TetrisShape.prototype.collisionWithGrid = function(grid, direction)
+{
+    // Ghost the movement and convert co-ordinates
+    var newPos = {x:this.position.x+direction.x, y:this.position.y+direction.y};
+    var shape = this.data.shape;
+    var activeCells = [];
+    for(var i=0; i<shape.length; i++)
+    {
+        for(var j=0; j<shape[i].length; j++)
+        {
+            if(shape[i][j])
+            {
+                activeCells.push(localCellToWorldCell(newPos, {x:j, y:i}));
+            }
+        }
+    }
+    for(i=0; i<activeCells.length; i++)
+    {
+        if(grid[activeCells[i].x][activeCells[i].y])
+        {
+            return true;
+        }
+    }
+    return false;
+};
+
+// We need to handle sideways collision instead
+// TODO - MODIFY FOR COLLISION WITH ALL ACTIVE CELLS
+// DETERMINE POST MOVE CO-ORDINATES FOR 1 CELLS, NOT 0, THEN SEE IF GRID OVERLAP
+TetrisShape.prototype.objectBelow = function(grid)
+{
+    // Get the lowest block in each column and convert to world co-ordinates
+    var shape = this.data.shape;
+    var lowestBlocks = []; // co-ordinates of lowest block for each column
+    for(var i=0; i<shape.length; i++)
+    {
+        for(var j=0; j<shape[i].length; j++)
+        {
+            if(!lowestBlocks[j] || i > lowestBlocks[j].y)
+            {
+                lowestBlocks[j] = {x:j, y:i};
+            }
+        }
+    }
+    // Add 1 to the y of each block, testing for collisions below only
+    // Also convert to world cells for easy comparison
+    // If grid is occupied at location, return false
+    for(i=0; i<lowestBlocks.length; i++)
+    {
+        lowestBlocks[i].y += 1;
+        var worldPos = localCellToWorldCell(this.position, lowestBlocks[i]);
+        if(grid[worldPos.x][worldPos.y]) // object directly below us
+        {
+            return true;
+        }
+    }
+    return false;
+};
+
 TetrisShape.prototype.moveLegal = function(grid, direction)
 {
     // Collision with left boundry
-    if(this.position.x)
+    var rightBorder = grid.length;
+    var bottomBorder = grid[0].length;
+    var spacesLeft = this.spacesLeft();
+    var spacesRight = this.spacesRight();
+    var spacesBottom = this.spacesBottom();
+    if(direction.x < 0 && (this.position.x + spacesLeft) <= 0)
     {
-
+        return false;
     }
+    if(direction.x > 0 && (this.position.x + spacesRight + this.data.shape.length) >= rightBorder)
+    {
+        return false;
+    }
+    if(direction.y > 0 && (this.position.y + spacesBottom + this.data.shape.length) >= bottomBorder)
+    {
+        return false;
+    }
+    if(this.collisionWithGrid(grid, direction))
+    {
+        return false;
+    };
+    /*
+    if(direction.y > 0) // Now test if there is an object below us
+    {
+        if(this.objectBelow(grid))
+        {
+            return false;
+        }
+    }*/
+
+    return true;
 };
 
 TetrisShape.prototype.move = function(grid, direction)
 {
-
+    if(!this.moveLegal(grid, direction))
+    {
+        return false;
+    }
+    this.position.x += direction.x;
+    this.position.y += direction.y;
+    return true;
 };
 
 TetrisShape.prototype.draw = function(ctx, cellSize)
@@ -112,6 +263,10 @@ TetrisShape.prototype.draw = function(ctx, cellSize)
     {
         for(var j=0; j<shape[i].length; j++)
         {
+            if(shape[i][j] != 1)
+            {
+                continue;
+            }
             var position = {x:worldPosition.x + cellSize*j, y:worldPosition.y + cellSize*i};
             drawCell(ctx, color, position, cellSize);
         }
@@ -136,7 +291,7 @@ Tetris.prototype._drawGrid = function(grid, cellSize, gridSize)
     for(var i=0; i<gridSize.x; i++)
     {
         ctx.beginPath();
-        ctx.strokeStyle = "#ccc";
+        ctx.strokeStyle = "rgba(204, 204, 204, 0.5)";
         ctx.lineWidth = 1;
         ctx.moveTo(i*cellSize, 0);
         ctx.lineTo(i*cellSize, canvasSize.y);
@@ -148,12 +303,25 @@ Tetris.prototype._drawGrid = function(grid, cellSize, gridSize)
     for(i=0; i<gridSize.y; i++)
     {
         ctx.beginPath();
-        ctx.strokeStyle = "#ccc";
+        ctx.strokeStyle = "rgba(204, 204, 204, 0.5)";
         ctx.lineWidth = 1;
         ctx.moveTo(0, i*cellSize);
         ctx.lineTo(canvasSize.x, i*cellSize);
         ctx.closePath();
         ctx.stroke();
+    }
+
+    for(i=0; i<gridSize.x; i++)
+    {
+        for(var j=0; j<gridSize.y; j++)
+        {
+            if(grid[i][j])
+            {
+                // This should be optimised, dont want to redraw unless I have to...
+                // Maybe a second array of bools, whether or not to update that square, or maybe that row
+                drawCell(ctx, grid[i][j], cellToWorld({x:i, y:j}, cellSize), cellSize);
+            }
+        }
     }
 };
 
@@ -173,8 +341,8 @@ Tetris.prototype._redraw = function()
         this.activeShape.draw(this.ctx, this.cellSize);
     }
 };
-// End Draw Functions
 
+// End Draw Functions
 Tetris.prototype._createGrid = function(gridSize)
 {
     var grid = [];
@@ -195,11 +363,15 @@ Tetris.prototype.userInput = function(self, data)
     {
         if(data && data.key == 'a')
         {
-            self.activeShape.position.x -= 1;
+            self.activeShape.move(self.grid, {x:-1, y:0});
         }
         else if(data && data.key == 'd')
         {
-            self.activeShape.position.x += 1;
+            self.activeShape.move(self.grid, {x:1, y:0});
+        }
+        else if(data && data.key == 's')
+        {
+            self.activeShape.move(self.grid, {x:0, y:1});
         }
         self._redraw();
     }
@@ -217,16 +389,42 @@ Tetris.prototype.init = function(cellSize, gridSize)
     };
 };
 
+// Flags cells on the grid for drawing based on shape
+Tetris.prototype._shapeToGrid = function(shape)
+{
+    //localCellToWorldCell
+    var shapeGrid = shape.data.shape;
+    for(var i=0; i<shapeGrid.length; i++)
+    {
+        for(var j=0; j<shapeGrid[i].length; j++)
+        {
+            if(!shapeGrid[i][j])
+            {
+                continue;
+            }
+            var coords = localCellToWorldCell(shape.position, {x:j, y:i});
+            this.grid[coords.x][coords.y] = shape.data.color;
+        }
+    }
+};
+
 Tetris.prototype._innerGameLoop = function()
 {
     if(this.activeShape)
     {
-        this.activeShape.position.y += 1;
+        if(!this.activeShape.move(this.grid, {x:0, y:1}))
+        {
+            // Cannot move down
+            this._shapeToGrid(this.activeShape);
+            this.activeShape = null; // We need a new active shape
+        }
+
+        this._redraw();
     }
     else // We need to create a new shape
     {
         this.activeShape = new TetrisShape();
-        this.activeShape.init("square");
+        this.activeShape.init(Math.floor(Math.random()*2) == 0 ? "square" : "lBlock");
     }
     this._redraw();
 };
@@ -238,7 +436,7 @@ Tetris.prototype._gameLoop = function()
     this.loopTimeout = setTimeout(function()
     {
         self._gameLoop();
-    }, 1000);
+    }, 500);
 };
 
 Tetris.prototype.run = function()
