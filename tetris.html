@@ -5,9 +5,9 @@
 
 var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS MIGHT BREAK!!
 {
-    lBlock:
+    squiggleBlock:
     {
-        color:"green",
+        color:"orange",
         shape:
         [
             [0, 0, 0],
@@ -15,9 +15,19 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
             [1, 1, 0]
         ]
     },
+    iSquiggleBlock:
+    {
+        color:"green",
+        shape:
+        [
+            [0, 0, 0],
+            [1, 1, 0],
+            [0, 1, 1]
+        ]
+    },
     square:
     {
-        color:"red",
+        color:"pink",
         shape:
         [
             [1 ,1],
@@ -26,13 +36,43 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
     },
     line:
     {
-        color:"orange",
+        color:"red",
         shape:
         [
             [0, 1, 0, 0],
             [0, 1, 0, 0],
             [0, 1, 0, 0],
             [0, 1, 0, 0]
+        ]
+    },
+    lBlock:
+    {
+        color:"blue",
+        shape:
+        [
+            [0, 1, 0],
+            [0, 1, 0],
+            [0, 1, 1]
+        ]
+    },
+    iLBlock:
+    {
+        color:"purple",
+        shape:
+        [
+            [0, 1, 0],
+            [0, 1, 0],
+            [1, 1, 0]
+        ]
+    },
+    tBlock:
+    {
+        color:"yellow",
+        shape:
+        [
+            [0, 0, 0],
+            [0, 1, 0],
+            [1, 1, 1]
         ]
     }
 };
@@ -471,6 +511,15 @@ Tetris.prototype.init = function(cellSize, gridSize)
     this.cellSize = cellSize;
     this.gridSize = gridSize;
     this.grid = this._createGrid(gridSize);
+    this.shapes = [];
+    for(var it in tetrisShapes) // Add all shape names to array
+    {
+        if(tetrisShapes.hasOwnProperty(it))
+        {
+            this.shapes.push(it);
+        }
+    }
+
     var self = this;
     document.onkeypress = function(data)
     {
@@ -541,6 +590,11 @@ Tetris.prototype._clearFullLines = function()
     }
 };
 
+Tetris.prototype.newBlock = function()
+{
+    return this.shapes[Math.floor(Math.random()*this.shapes.length)];
+};
+
 Tetris.prototype._innerGameLoop = function()
 {
     if(this.activeShape)
@@ -557,7 +611,7 @@ Tetris.prototype._innerGameLoop = function()
     else // We need to create a new shape
     {
         this.activeShape = new TetrisShape();
-        this.activeShape.init(Math.floor(Math.random()*2) == 0 ? "lBlock" : "lBlock"); // lBlock
+        this.activeShape.init(this.newBlock()); // lBlock
     }
     this._redraw();
 };
