@@ -342,13 +342,6 @@ TetrisShape.prototype.moveLegal = function(grid, direction, skipBorderCheck)
         direction = {x:0, y:0}; // For rotation tests
     }
 
-    // Collision with left boundry
-    var rightBorder = grid.length;
-    var bottomBorder = grid[0].length;
-    var spacesLeft = this.spacesLeft();
-    var spacesRight = this.spacesRight();
-    var spacesBottom = this.spacesBottom();
-
     if((!skipBorderCheck && this.overBorder(grid, direction)) ||
         this.collisionWithGrid(grid, direction))
     {
@@ -489,19 +482,19 @@ Tetris.prototype.userInput = function(self, data)
 {
     if(self.activeShape)
     {
-        if(data && data.key == 'w')
+        if(data && (data.key == 'w' || data.key == 'ArrowUp'))
         {
             self.activeShape.rotate(self.grid);
         }
-        else if(data && data.key == 'a')
+        else if(data && (data.key == 'a' || data.key == 'ArrowLeft'))
         {
             self.activeShape.move(self.grid, {x:-1, y:0});
         }
-        else if(data && data.key == 'd')
+        else if(data && (data.key == 'd' || data.key == 'ArrowRight'))
         {
             self.activeShape.move(self.grid, {x:1, y:0});
         }
-        else if(data && data.key == 's')
+        else if(data && (data.key == 's' || data.key == 'ArrowDown'))
         {
             self.activeShape.move(self.grid, {x:0, y:1});
         }
@@ -529,7 +522,7 @@ Tetris.prototype.init = function(cellSize, gridSize)
     }
 
     var self = this;
-    document.onkeypress = function(data)
+    document.onkeydown = function(data)
     {
         Tetris.prototype.userInput(self, data);
     };
@@ -621,6 +614,10 @@ Tetris.prototype._innerGameLoop = function()
         this.activeShape = new TetrisShape();
         this.activeShape.init(this.newBlock()); // lBlock
         this.activeShape.position.x = Math.floor(this.gridSize.x/2 - this.activeShape.data.shape.length/2);
+        if(!this.activeShape.moveLegal(this.grid, null, true))
+        {
+            clearTimeout(this.loopTimeout); // game is over
+        }
     }
     this._redraw();
 };
@@ -628,11 +625,11 @@ Tetris.prototype._innerGameLoop = function()
 Tetris.prototype._gameLoop = function()
 {
     var self = this;
-    self._innerGameLoop();
     this.loopTimeout = setTimeout(function()
     {
         self._gameLoop();
     }, 500);
+    self._innerGameLoop();
 };
 
 Tetris.prototype.run = function()
