@@ -246,7 +246,7 @@ TetrisShape.prototype.moveLegal = function(grid, direction)
     {
         return false;
     }
-    if(direction.x > 0 && (this.position.x + spacesRight + this.data.shape.length) >= rightBorder)
+    if(direction.x > 0 && (this.position.x - spacesRight + this.data.shape.length) >= rightBorder)
     {
         return false;
     }
