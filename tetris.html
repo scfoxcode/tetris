@@ -10,9 +10,9 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
         color:"orange",
         shape:
         [
-            [0, 0, 0],
             [0, 1, 1],
-            [1, 1, 0]
+            [1, 1, 0],
+            [0, 0, 0]
         ]
     },
     iSquiggleBlock:
@@ -20,9 +20,9 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
         color:"green",
         shape:
         [
-            [0, 0, 0],
             [1, 1, 0],
-            [0, 1, 1]
+            [0, 1, 1],
+            [0, 0, 0]
         ]
     },
     square:
@@ -70,9 +70,9 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
         color:"yellow",
         shape:
         [
-            [0, 0, 0],
             [0, 1, 0],
-            [1, 1, 1]
+            [1, 1, 1],
+            [0, 0, 0]
         ]
     }
 };
@@ -131,7 +131,9 @@ var drawCell = function(ctx, color, worldPosition, cellSize)
 {
     ctx.beginPath();
     ctx.fillStyle = color;
-    ctx.fillRect(worldPosition.x+1, worldPosition.y+1, cellSize-2, cellSize-2);
+    ctx.fillRect(worldPosition.x, worldPosition.y, cellSize, cellSize);
+    ctx.strokeStyle = "black";
+    ctx.strokeRect(worldPosition.x, worldPosition.y, cellSize, cellSize);
     ctx.closePath();
 };
 
@@ -405,6 +407,7 @@ Tetris = function(canvas) // Id of the canvas to draw to
 // Start Draw Functions
 Tetris.prototype._drawGrid = function(grid, cellSize, gridSize)
 {
+    /*
     // Draw vertical lines
     var ctx = this.ctx;
     var canvasSize = this.canvasSize;
@@ -429,9 +432,11 @@ Tetris.prototype._drawGrid = function(grid, cellSize, gridSize)
         ctx.lineTo(canvasSize.x, i*cellSize);
         ctx.closePath();
         ctx.stroke();
-    }
+    }*/
 
-    for(i=0; i<gridSize.x; i++)
+    var ctx = this.ctx;
+    var canvasSize = this.canvasSize;
+    for(var i=0; i<gridSize.x; i++)
     {
         for(var j=0; j<gridSize.y; j++)
         {
@@ -612,6 +617,7 @@ Tetris.prototype._innerGameLoop = function()
     {
         this.activeShape = new TetrisShape();
         this.activeShape.init(this.newBlock()); // lBlock
+        this.activeShape.position.x = Math.floor(this.gridSize.x/2 - this.activeShape.data.shape.length/2);
     }
     this._redraw();
 };
