@@ -37,6 +37,21 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
     }
 };
 
+// Clones the 2d shape array and returns
+var cloneShapeArray = function(shape)
+{
+    var newShape = [];
+    for(var i=0; i<shape.length; i++)
+    {
+        newShape[i] = [];
+        for(var j=0; j<shape[i].length; j++)
+        {
+            newShape[i][j] = shape[i][j];
+        }
+    }
+    return newShape;
+};
+
 var cloneShape = function(shape) // This is needed because we will be rotating the shape
 {
     var s = tetrisShapes[shape];
@@ -47,15 +62,7 @@ var cloneShape = function(shape) // This is needed because we will be rotating t
     }
     var newShape = {};
     newShape.color = s.color;
-    newShape.shape = [];
-    for(var i=0; i<s.shape.length; i++)
-    {
-        newShape.shape[i] = [];
-        for(var j=0; j<s.shape[i].length; j++)
-        {
-            newShape.shape[i][j] = s.shape[i][j];
-        }
-    }
+    newShape.shape = cloneShapeArray(s.shape);
     return newShape;
 };
 
@@ -102,9 +109,11 @@ TetrisShape = function()
 
 // Hopefully rotates right 90 degrees
 // Don't forget to check if rotation is legal
-TetrisShape.prototype.rotate = function()
+TetrisShape.prototype.rotate = function(grid) // collisionWithGrid
 {
-    var shape = this.data.shape;
+    var original = cloneShapeArray(this.data.shape); // We need this for rotation legal I think
+    var shape = cloneShapeArray(this.data.shape);
+
     if(this.type == "square") // Can't rotate a square
     {
         return;
@@ -131,7 +140,11 @@ TetrisShape.prototype.rotate = function()
                 [0, 1, 0, 0]
             ]
         }
-        this.data.shape = shape;
+        this.data.shape = shape; // Set the shape
+        if(this.collisionWithGrid(grid))
+        {
+            this.data.shape = original; // Collision, do not allow rotation
+        }
         return;
     }
     // Normal 3 by 3 rotate 90 degrees - y then x remember for visual reasons
@@ -147,7 +160,11 @@ TetrisShape.prototype.rotate = function()
     shape[2][1] = shape[1][2];
     shape[1][2] = temp;
 
-    this.data.shape = shape;
+    this.data.shape = shape; // Set the shape
+    if(this.collisionWithGrid(grid))
+    {
+        this.data.shape = original; // Collision, do not allow rotation
+    }
 };
 
 TetrisShape.prototype.spacesLeft = function() // Number of empty columns on left
@@ -210,6 +227,11 @@ TetrisShape.prototype.spacesBottom = function() // Number of empty columns at th
 
 TetrisShape.prototype.collisionWithGrid = function(grid, direction)
 {
+    if(!direction)
+    {
+        direction = {x:0, y:0};
+    }
+
     // Ghost the movement and convert co-ordinates
     var newPos = {x:this.position.x+direction.x, y:this.position.y+direction.y};
     var shape = this.data.shape;
@@ -390,7 +412,7 @@ Tetris.prototype.userInput = function(self, data)
     {
         if(data && data.key == 'w')
         {
-            self.activeShape.rotate();
+            self.activeShape.rotate(self.grid);
         }
         else if(data && data.key == 'a')
         {
