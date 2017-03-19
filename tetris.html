@@ -10,9 +10,28 @@
 <script>
     window.onload = function()
     {
-        var game = new Tetris("myCanvas");
-        game.init(40, {x:10, y:14});
-        game.run();
+        var runGame = function()
+        {
+            var game = new Tetris("myCanvas");
+            game.init(40, {x:10, y:14});
+            game.run();
+        };
+
+        var images = ["blue.png", "green.png", "lightBlue.png", "orange.png", "purple.png", "red.png", "yellow.png"];
+        var loaded = 0;
+        images.forEach(function(element)
+        {
+            var image = new Image();
+            image.src = element;
+            image.onload = function()
+            {
+                loaded++;
+                if(loaded == images.length)
+                {
+                    runGame();
+                }
+            };
+        });
     };
 </script>
 </html>

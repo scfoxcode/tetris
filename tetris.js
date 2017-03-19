@@ -5,73 +5,73 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
 {
     squiggleBlock:
     {
-        color:"orange",
+        color:"orange.png",
         shape:
-            [
-                [0, 1, 1],
-                [1, 1, 0],
-                [0, 0, 0]
-            ]
+        [
+            [0, 1, 1],
+            [1, 1, 0],
+            [0, 0, 0]
+        ]
     },
     iSquiggleBlock:
     {
-        color:"green",
+        color:"green.png",
         shape:
-            [
-                [1, 1, 0],
-                [0, 1, 1],
-                [0, 0, 0]
-            ]
+        [
+            [1, 1, 0],
+            [0, 1, 1],
+            [0, 0, 0]
+        ]
     },
     square:
     {
-        color:"pink",
+        color:"red.png",
         shape:
-            [
-                [1 ,1],
-                [1, 1]
-            ]
+        [
+            [1 ,1],
+            [1, 1]
+        ]
     },
     line:
     {
-        color:"red",
+        color:"lightBlue.png",
         shape:
-            [
-                [0, 1, 0, 0],
-                [0, 1, 0, 0],
-                [0, 1, 0, 0],
-                [0, 1, 0, 0]
-            ]
+        [
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0]
+        ]
     },
     lBlock:
     {
-        color:"blue",
+        color:"blue.png",
         shape:
-            [
-                [0, 1, 0],
-                [0, 1, 0],
-                [0, 1, 1]
-            ]
+        [
+            [0, 1, 0],
+            [0, 1, 0],
+            [0, 1, 1]
+        ]
     },
     iLBlock:
     {
-        color:"purple",
+        color:"purple.png",
         shape:
-            [
-                [0, 1, 0],
-                [0, 1, 0],
-                [1, 1, 0]
-            ]
+        [
+            [0, 1, 0],
+            [0, 1, 0],
+            [1, 1, 0]
+        ]
     },
     tBlock:
     {
-        color:"yellow",
+        color:"yellow.png",
         shape:
-            [
-                [0, 1, 0],
-                [1, 1, 1],
-                [0, 0, 0]
-            ]
+        [
+            [0, 1, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+        ]
     }
 };
 
@@ -127,12 +127,7 @@ var cellToWorld = function(cell, cellSize)
 
 var drawCell = function(ctx, color, worldPosition, cellSize)
 {
-    ctx.beginPath();
-    ctx.fillStyle = color;
-    ctx.fillRect(worldPosition.x, worldPosition.y, cellSize, cellSize);
-    ctx.strokeStyle = "black";
-    ctx.strokeRect(worldPosition.x, worldPosition.y, cellSize, cellSize);
-    ctx.closePath();
+    ctx.drawImage(ctx.tetrisImages[color], worldPosition.x, worldPosition.y, cellSize, cellSize);
 };
 
 TetrisShape = function()
@@ -400,6 +395,16 @@ Tetris = function(canvas) // Id of the canvas to draw to
     this.canvasSize = {x:parseInt(this.canvas.width), y:parseInt(this.canvas.height)};
     this.loopTimeout = null; // Holds game loop timeout reference
     this.activeShape = null; // Current active shape, if null create new
+
+    this.ctx.tetrisImages = {}; // We need to create image objects for drawCell to use
+    var images = ["blue.png", "green.png", "lightBlue.png", "orange.png", "purple.png", "red.png", "yellow.png"];
+    for(var i=0; i<images.length; i++)
+    {
+        this.ctx.tetrisImages[images[i]] = new Image();
+        this.ctx.tetrisImages[images[i]].src = images[i];
+    }
+
+
 };
 
 // Start Draw Functions
@@ -454,7 +459,7 @@ Tetris.prototype._redraw = function()
 
     // Clear grid with background color
     ctx.beginPath();
-    ctx.fillStyle = "#eee";
+    ctx.fillStyle = "#f5f5f5";
     ctx.fillRect(0, 0, this.canvasSize.x, this.canvasSize.y);
     ctx.closePath();
 
