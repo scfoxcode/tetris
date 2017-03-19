@@ -111,8 +111,34 @@ TetrisShape = function()
 // Don't forget to check if rotation is legal
 TetrisShape.prototype.rotate = function(grid) // collisionWithGrid
 {
+    var self = this;
     var original = cloneShapeArray(this.data.shape); // We need this for rotation legal I think
     var shape = cloneShapeArray(this.data.shape);
+
+    var finalizeShape = function() // I don't like this here, should be moved
+    {
+        self.data.shape = shape; // Set the shape
+        var result = self.overBorder(grid);
+        if(result) // Border collision, apply appropriate movement
+        {
+            if(result.y != 0) // bottom collision, don't allow movement on rotate
+            {
+                self.data.shape = original;
+                return;
+            }
+            self.position.x += result.x;
+            self.position.y += result.y;
+        }
+        if(!self.moveLegal(grid, null, true))
+        {
+            if(result) // Revert movement
+            {
+                self.position.x -= result.x;
+                self.position.y -= result.y;
+            }
+            self.data.shape = original; // Collision, do not allow rotation
+        }
+    };
 
     if(this.type == "square") // Can't rotate a square
     {
@@ -140,11 +166,7 @@ TetrisShape.prototype.rotate = function(grid) // collisionWithGrid
                 [0, 1, 0, 0]
             ]
         }
-        this.data.shape = shape; // Set the shape
-        if(this.collisionWithGrid(grid))
-        {
-            this.data.shape = original; // Collision, do not allow rotation
-        }
+        finalizeShape();
         return;
     }
     // Normal 3 by 3 rotate 90 degrees - y then x remember for visual reasons
@@ -160,11 +182,7 @@ TetrisShape.prototype.rotate = function(grid) // collisionWithGrid
     shape[2][1] = shape[1][2];
     shape[1][2] = temp;
 
-    this.data.shape = shape; // Set the shape
-    if(this.collisionWithGrid(grid))
-    {
-        this.data.shape = original; // Collision, do not allow rotation
-    }
+    finalizeShape();
 };
 
 TetrisShape.prototype.spacesLeft = function() // Number of empty columns on left
@@ -256,38 +274,51 @@ TetrisShape.prototype.collisionWithGrid = function(grid, direction)
     return false;
 };
 
-TetrisShape.prototype.moveLegal = function(grid, direction)
+// Optional direction to be applied
+TetrisShape.prototype.overBorder = function(grid, direction)
 {
+    var rightBorder = grid.length;
+    var bottomBorder = grid[0].length;
+    var spacesLeft = this.spacesLeft();
+    var spacesRight = this.spacesRight();
+    var spacesBottom = this.spacesBottom();
+
+    // Return the movement required to make it valid
+    if((!direction || direction.x < 0) && (this.position.x + spacesLeft) <= 0)
+    {
+        return {x:(this.position.x + spacesLeft)*-1, y:0};
+    }
+    if((!direction || direction.x > 0) && (this.position.x - spacesRight + this.data.shape.length) >= rightBorder)
+    {
+        return {x:-(this.position.x - spacesRight + this.data.shape.length - rightBorder), y:0};
+    }
+    if((!direction || direction.y > 0) && (this.position.y - spacesBottom + this.data.shape.length) >= bottomBorder)
+    {
+        return {x:0, y:-(this.position.y - spacesBottom + this.data.shape.length-bottomBorder)};
+    }
+    return false;
+};
+
+// Third flag is optional, will be filled with data in event of collision
+TetrisShape.prototype.moveLegal = function(grid, direction, skipBorderCheck)
+{
+    if(!direction)
+    {
+        direction = {x:0, y:0}; // For rotation tests
+    }
+
     // Collision with left boundry
     var rightBorder = grid.length;
     var bottomBorder = grid[0].length;
     var spacesLeft = this.spacesLeft();
     var spacesRight = this.spacesRight();
     var spacesBottom = this.spacesBottom();
-    if(direction.x < 0 && (this.position.x + spacesLeft) <= 0)
+
+    if((!skipBorderCheck && this.overBorder(grid, direction)) ||
+       this.collisionWithGrid(grid, direction))
     {
         return false;
     }
-    if(direction.x > 0 && (this.position.x - spacesRight + this.data.shape.length) >= rightBorder)
-    {
-        return false;
-    }
-    if(direction.y > 0 && (this.position.y - spacesBottom + this.data.shape.length) >= bottomBorder)
-    {
-        return false;
-    }
-    if(this.collisionWithGrid(grid, direction))
-    {
-        return false;
-    }
-    /*
-    if(direction.y > 0) // Now test if there is an object below us
-    {
-        if(this.objectBelow(grid))
-        {
-            return false;
-        }
-    }*/
 
     return true;
 };
