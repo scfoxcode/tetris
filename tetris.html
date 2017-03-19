@@ -250,14 +250,14 @@ TetrisShape.prototype.moveLegal = function(grid, direction)
     {
         return false;
     }
-    if(direction.y > 0 && (this.position.y + spacesBottom + this.data.shape.length) >= bottomBorder)
+    if(direction.y > 0 && (this.position.y - spacesBottom + this.data.shape.length) >= bottomBorder)
     {
         return false;
     }
     if(this.collisionWithGrid(grid, direction))
     {
         return false;
-    };
+    }
     /*
     if(direction.y > 0) // Now test if there is an object below us
     {
