@@ -10,7 +10,7 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
         color:"green",
         shape:
         [
-            [0 ,0, 0],
+            [0, 0, 0],
             [0, 1, 1],
             [1, 1, 0]
         ]
@@ -22,6 +22,17 @@ var tetrisShapes = // SHAPES MUST BE SQUARE OR MOVE LEGAL AND HELPER FUNCTIONS M
         [
             [1 ,1],
             [1, 1]
+        ]
+    },
+    line:
+    {
+        color:"orange",
+        shape:
+        [
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0]
         ]
     }
 };
@@ -47,7 +58,6 @@ var cloneShape = function(shape) // This is needed because we will be rotating t
     }
     return newShape;
 };
-
 
 // shapeCellPos - the position of the shape in cell co-ordinates
 // localCellPos - the position of the cell inside the shape
@@ -88,6 +98,56 @@ TetrisShape = function()
         // Refactor note, this being in data is bad, should have a this.shape
         this.data = cloneShape(type);
     };
+};
+
+// Hopefully rotates right 90 degrees
+// Don't forget to check if rotation is legal
+TetrisShape.prototype.rotate = function()
+{
+    var shape = this.data.shape;
+    if(this.type == "square") // Can't rotate a square
+    {
+        return;
+    }
+    else if(this.type == "line") // This one is tricky so special case
+    {                            // Don't like this special case
+        if(shape[0][1]) // Currently vertical
+        {
+            shape =
+            [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [1, 1, 1, 1],
+                [0, 0, 0, 0]
+            ]
+        }
+        else
+        {
+            shape =
+            [
+                [0, 1, 0, 0],
+                [0, 1, 0, 0],
+                [0, 1, 0, 0],
+                [0, 1, 0, 0]
+            ]
+        }
+        this.data.shape = shape;
+        return;
+    }
+    // Normal 3 by 3 rotate 90 degrees - y then x remember for visual reasons
+    var temp = shape[0][0];
+    shape[0][0] = shape[2][0]; // Corners first
+    shape[2][0] = shape[2][2];
+    shape[2][2] = shape[0][2];
+    shape[0][2] = temp;
+
+    temp = shape[0][1];
+    shape[0][1] = shape[1][0];
+    shape[1][0] = shape[2][1];
+    shape[2][1] = shape[1][2];
+    shape[1][2] = temp;
+
+    this.data.shape = shape;
 };
 
 TetrisShape.prototype.spacesLeft = function() // Number of empty columns on left
@@ -328,7 +388,11 @@ Tetris.prototype.userInput = function(self, data)
 {
     if(self.activeShape)
     {
-        if(data && data.key == 'a')
+        if(data && data.key == 'w')
+        {
+            self.activeShape.rotate();
+        }
+        else if(data && data.key == 'a')
         {
             self.activeShape.move(self.grid, {x:-1, y:0});
         }
@@ -440,7 +504,7 @@ Tetris.prototype._innerGameLoop = function()
     else // We need to create a new shape
     {
         this.activeShape = new TetrisShape();
-        this.activeShape.init(Math.floor(Math.random()*2) == 0 ? "square" : "square"); // lBlock
+        this.activeShape.init(Math.floor(Math.random()*2) == 0 ? "lBlock" : "lBlock"); // lBlock
     }
     this._redraw();
 };
