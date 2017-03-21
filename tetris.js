@@ -412,15 +412,9 @@ Tetris.prototype.initControls = function()
     score.textContent = 0;
     score.currentScore = 0;
 
-    var muteArea = document.getElementById("topRight");
-    var mute = document.createElement("img");
+    var mute = document.getElementById("muteButton");
     mute.muted = false;
     mute.src = "soundon.png";
-    mute.width = 52;
-    mute.height = 52;
-    mute.style.marginTop = "5px";
-    mute.style.cursor = "pointer";
-
     mute.onclick = function()
     {
         this.muted = !this.muted;
@@ -434,8 +428,6 @@ Tetris.prototype.initControls = function()
             music.pause();
         }
     };
-
-    muteArea.appendChild(mute);
 };
 
 Tetris.prototype.setScore = function(value)

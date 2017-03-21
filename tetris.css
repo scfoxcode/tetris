@@ -52,3 +52,11 @@
     color:black;
     font-family: 'Open Sans', sans-serif;
 }
+
+#muteButton
+{
+    width:52px;
+    height:52px;
+    margin-top:5px;
+    cursor:pointer;
+}
