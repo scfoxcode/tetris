@@ -386,6 +386,9 @@ Tetris = function(canvas) // Id of the canvas to draw to, id of the controls div
     this.canvas = document.getElementById(canvas);
     this.controls = document.getElementById("topGame");
     this.ctx = this.canvas.getContext("2d");
+    this.level = 1; // Current level. Each level increase will decrease game loop interval by 25;
+    this.defaultDelay = 500;
+    this.delay = this.defaultDelay;
     this.canvasSize = {x:parseInt(this.canvas.width), y:parseInt(this.canvas.height)};
     this.loopTimeout = null; // Holds game loop timeout reference
     this.activeShape = null; // Current active shape, if null create new
@@ -407,6 +410,7 @@ Tetris.prototype.initControls = function()
     var score = document.getElementById("topMiddle");
     score.className = "tetrisScore";
     score.textContent = 0;
+    score.currentScore = 0;
 
     var muteArea = document.getElementById("topRight");
     var mute = document.createElement("img");
@@ -432,6 +436,32 @@ Tetris.prototype.initControls = function()
     };
 
     muteArea.appendChild(mute);
+};
+
+Tetris.prototype.setScore = function(value)
+{
+    var score = document.getElementById("topMiddle");
+    score.currentScore = value;
+    score.textContent = value;
+};
+
+Tetris.prototype.addScore = function(value)
+{
+    var score = document.getElementById("topMiddle");
+    score.currentScore += value;
+    score.textContent = score.currentScore;
+    this.delay = this.defaultDelay - 25*(this.level-1);
+    if(this.delay < 50)
+    {
+        this.delay = 50;
+    }
+};
+
+Tetris.prototype.zeroScore = function()
+{
+    var score = document.getElementById("topMiddle");
+    score.currentScore = 0;
+    score.textContent = 0;
 };
 
 // Start Draw Functions
@@ -578,6 +608,14 @@ Tetris.prototype._clearFullLines = function()
     {
         return 0;
     }
+    else if(fullRows.length == 4) // Tetris
+    {
+        this.addScore(800);
+    }
+    else
+    {
+        this.addScore(100*fullRows.length);
+    }
 
     for(i=0; i<fullRows.length; i++) // For each row cleared, top to bottom
     {
@@ -635,7 +673,7 @@ Tetris.prototype._gameLoop = function()
     this.loopTimeout = setTimeout(function()
     {
         self._gameLoop();
-    }, 500);
+    }, this.delay);
     self._innerGameLoop();
 };
 
