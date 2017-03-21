@@ -402,9 +402,36 @@ Tetris = function(canvas) // Id of the canvas to draw to, id of the controls div
 
 Tetris.prototype.initControls = function()
 {
+    var music = document.getElementById("music");
+
     var score = document.getElementById("topMiddle");
     score.className = "tetrisScore";
     score.textContent = 0;
+
+    var muteArea = document.getElementById("topRight");
+    var mute = document.createElement("img");
+    mute.muted = false;
+    mute.src = "soundon.png";
+    mute.width = 52;
+    mute.height = 52;
+    mute.style.marginTop = "5px";
+    mute.style.cursor = "pointer";
+
+    mute.onclick = function()
+    {
+        this.muted = !this.muted;
+        this.src = this.muted ? "soundoff.png" : "soundon.png";
+        if (music.paused)
+        {
+            music.play();
+        }
+        else
+        {
+            music.pause();
+        }
+    };
+
+    muteArea.appendChild(mute);
 };
 
 // Start Draw Functions
