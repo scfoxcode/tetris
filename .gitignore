@@ -48,5 +48,6 @@ Temporary Items
 
 # Ignore ide folder and music folder
 !gitignore
+Tetris.zip
 music/
 .idea/

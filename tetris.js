@@ -381,9 +381,10 @@ TetrisShape.prototype.draw = function(ctx, cellSize)
     }
 };
 
-Tetris = function(canvas) // Id of the canvas to draw to
+Tetris = function(canvas) // Id of the canvas to draw to, id of the controls div
 {
     this.canvas = document.getElementById(canvas);
+    this.controls = document.getElementById("topGame");
     this.ctx = this.canvas.getContext("2d");
     this.canvasSize = {x:parseInt(this.canvas.width), y:parseInt(this.canvas.height)};
     this.loopTimeout = null; // Holds game loop timeout reference
@@ -396,40 +397,19 @@ Tetris = function(canvas) // Id of the canvas to draw to
         this.ctx.tetrisImages[images[i]] = new Image();
         this.ctx.tetrisImages[images[i]].src = images[i];
     }
+    this.initControls();
+};
 
-
+Tetris.prototype.initControls = function()
+{
+    var score = document.getElementById("topMiddle");
+    score.className = "tetrisScore";
+    score.textContent = 0;
 };
 
 // Start Draw Functions
 Tetris.prototype._drawGrid = function(grid, cellSize, gridSize)
 {
-    /*
-     // Draw vertical lines
-     var ctx = this.ctx;
-     var canvasSize = this.canvasSize;
-     for(var i=0; i<gridSize.x; i++)
-     {
-     ctx.beginPath();
-     ctx.strokeStyle = "rgba(204, 204, 204, 0.5)";
-     ctx.lineWidth = 1;
-     ctx.moveTo(i*cellSize, 0);
-     ctx.lineTo(i*cellSize, canvasSize.y);
-     ctx.closePath();
-     ctx.stroke();
-     }
-
-     // Draw horizontal lines
-     for(i=0; i<gridSize.y; i++)
-     {
-     ctx.beginPath();
-     ctx.strokeStyle = "rgba(204, 204, 204, 0.5)";
-     ctx.lineWidth = 1;
-     ctx.moveTo(0, i*cellSize);
-     ctx.lineTo(canvasSize.x, i*cellSize);
-     ctx.closePath();
-     ctx.stroke();
-     }*/
-
     var ctx = this.ctx;
     var canvasSize = this.canvasSize;
     for(var i=0; i<gridSize.x; i++)

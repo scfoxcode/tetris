@@ -2,13 +2,23 @@
 <html>
 <head>
     <title>Tetris</title>
+    <link rel="stylesheet" type="text/css" href="tetris.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <script type="text/javascript" src="tetris.js"></script>
 </head>
 <body>
-    <audio controls autoplay loop style="display:none">
+    <audio id="music" controls autoplay loop style="display:none">
         <source src="tetris.ogg" type="audio/ogg">
     </audio>
-    <canvas id="myCanvas" width="400" height="560" style="border:1px black solid"/>
+    <div id="gameContainer">
+        <div id="topGame" width="400" height ="64">
+            <div id="topLeft"></div
+            ><div id="topMiddle"></div
+            ><div id="topRight"></div>
+        </div>
+        <canvas id="myCanvas" width="400" height="560"/>
+    </div>
+
 </body>
 <script>
     window.onload = function()

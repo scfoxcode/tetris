@@ -1,0 +1,54 @@
+#topGame
+{
+    height:64px;
+    width:400px;
+    border:1px black solid;
+    border-bottom:none;
+    background-color:#e5e5e5;
+    margin:0;
+    padding:0;
+}
+
+#myCanvas
+{
+    border:1px black solid;
+    border-top:none;
+}
+
+#topLeft
+{
+    display:inline-block;
+    vertical-align:top;
+    width:15%;
+    height:100%;
+    margin:0;
+    padding:0;
+}
+
+#topMiddle
+{
+    display:inline-block;
+    vertical-align:top;
+    height:100%;
+    width:70%;
+    margin:0;
+    padding:0;
+    text-align:center;
+}
+
+#topRight
+{
+    display:inline-block;
+    vertical-align:top;
+    height:100%;
+    width:15%;
+    margin:0;
+    padding:0;
+}
+
+.tetrisScore
+{
+    font-size:48px;
+    color:black;
+    font-family: 'Open Sans', sans-serif;
+}
